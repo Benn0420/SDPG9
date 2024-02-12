@@ -1,13 +1,13 @@
 import arcade
 
 from Cards import Card
-from constants import SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE, CARD_SUITS, CARD_VALUES, CARD_SCALE, START_X, BOTTOM_Y, \
-    MAT_WIDTH, MAT_HEIGHT, X_SPACING, MIDDLE_Y, TOP_Y
+from constants import (SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE,
+                       CARD_SUITS, CARD_VALUES, CARD_SCALE, START_X,
+                       BOTTOM_Y, MAT_WIDTH, MAT_HEIGHT, X_SPACING, MIDDLE_Y, TOP_Y)
 
 
 class SolitaireGame(arcade.Window):
     """Main application class."""
-
     def __init__(self):
         super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
 
@@ -80,7 +80,7 @@ class SolitaireGame(arcade.Window):
         """for mouse press"""
 
         # get list of cards clicked
-        cards = arcade.get_sprites_at_point((x,y), self.card_list)
+        cards = arcade.get_sprites_at_point((x, y), self.card_list)
 
         # check if card has been clicked on
         if len(cards) > 0:
@@ -99,6 +99,25 @@ class SolitaireGame(arcade.Window):
         # no cards
         if len(self.held_cards) == 0:
             return
+
+        # if close to more than one pile, snap to closest
+        pile, distance = arcade.get_closest_sprite(self.held_cards[0], self.pile_mat_list)
+        reset_position = True
+
+        # check for contact
+        if arcade.check_for_collision(self.held_cards[0], pile):
+
+            # move dropped card(s) to pile
+            for i, dropped_card in enumerate(self.held_cards):
+                dropped_card.position = pile.center_x, pile.center_y
+
+            # cards snapped, don't reset
+            reset_position = False
+
+        # return cards to original position if snap is invalid
+        if reset_position:
+            for pile_index, card in enumerate(self.held_cards):
+                card.position = self.held_cards_original_location[pile_index]
 
         # release cards
         self.held_cards = []
