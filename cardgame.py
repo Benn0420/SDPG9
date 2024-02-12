@@ -81,6 +81,22 @@ class SolitaireGame(arcade.Window):
         for card in self.card_list:
             self.piles[STOCK].append(card)
 
+        # pull from stock and deal into tableau
+        for pile_no in range(TABLEAU_1, TABLEAU_7 + 1):
+            for j in range(pile_no - TABLEAU_1 + 1):
+                # pop each card from the stock
+                card = self.piles[STOCK].pop()
+                # add the card to the pile we are on
+                self.piles[pile_no].append(card)
+                # position
+                card.position = self.pile_mat_list[pile_no].position
+                # draw on top
+                self.pull_to_top(card)
+
+        # flip over tableau cards
+        for i in range(TABLEAU_1, TABLEAU_7 + 1):
+            self.piles[i][-1].face_up()
+
     def on_draw(self):
         """Render the screen"""
         # clear screen
@@ -103,11 +119,26 @@ class SolitaireGame(arcade.Window):
             # top of stack only
             primary_card = cards[-1]
 
-            self.held_cards = [primary_card]
-            # set position
-            self.held_cards_original_location = [self.held_cards[0].position]
-            # put it on top
-            self.pull_to_top(self.held_cards[0])
+            # what pile is the card in?
+            pile_index = self.get_pile_of_card(primary_card)
+
+            if primary_card.is_face_down:
+                primary_card.face_up()
+            else:
+                # get card being clicked
+                self.held_cards = [primary_card]
+                # set position
+                self.held_cards_original_location = [self.held_cards[0].position]
+                # put it on top
+                self.pull_to_top(self.held_cards[0])
+
+                # handle stack of cards
+                card_index = self.piles[pile_index].index(primary_card)
+                for i in range(card_index + 1, len(self.piles[pile_index])):
+                    card = self.piles[pile_index][i]
+                    self.held_cards.append(card)
+                    self.held_cards_original_location.append(card.position)
+                    self.pull_to_top(card)
 
     def on_mouse_release(self, x: float, y: float, button: int, modifiers: int):
         """for mouse release"""
