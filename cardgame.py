@@ -1,13 +1,8 @@
 import arcade
 
 from Cards import Card
-from constants import CARD_SUITS, CARD_VALUES, CARD_SCALE, START_X, BOTTOM_Y
-
-# screen title and size
-
-SCREEN_WIDTH = 1024
-SCREEN_HEIGHT = 768
-SCREEN_TITLE = "SOLITAIRE"
+from constants import SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE, CARD_SUITS, CARD_VALUES, CARD_SCALE, START_X, BOTTOM_Y, \
+    MAT_WIDTH, MAT_HEIGHT, X_SPACING, MIDDLE_Y, TOP_Y
 
 
 class SolitaireGame(arcade.Window):
@@ -26,6 +21,9 @@ class SolitaireGame(arcade.Window):
         # drag from/snap back location
         self.held_cards_original_location = None
 
+        # mats
+        self.pile_mat_list = None
+
     def setup(self):
         """Set up the game"""
 
@@ -33,6 +31,30 @@ class SolitaireGame(arcade.Window):
         self.held_cards = []
 
         self.held_cards_original_location = []
+
+        # Create mats
+        # sprite list of mats
+        self.pile_mat_list: arcade.SpriteList = arcade.SpriteList()
+
+        pile = arcade.SpriteSolidColor(MAT_WIDTH, MAT_HEIGHT, color=arcade.csscolor.DARK_OLIVE_GREEN)
+        pile.position = START_X, BOTTOM_Y
+        self.pile_mat_list.append(pile)
+
+        pile = arcade.SpriteSolidColor(MAT_WIDTH, MAT_HEIGHT, color=arcade.csscolor.DARK_OLIVE_GREEN)
+        pile.position = START_X + X_SPACING, BOTTOM_Y
+        self.pile_mat_list.append(pile)
+
+        # tableau
+        for i in range(7):
+            pile = arcade.SpriteSolidColor(MAT_WIDTH, MAT_HEIGHT, color=arcade.csscolor.DARK_OLIVE_GREEN)
+            pile.position = START_X + i * X_SPACING, MIDDLE_Y
+            self.pile_mat_list.append(pile)
+
+        # foundations
+        for i in range(4):
+            pile = arcade.SpriteSolidColor(MAT_WIDTH, MAT_HEIGHT, color=arcade.csscolor.DARK_OLIVE_GREEN)
+            pile.position = START_X + i * X_SPACING, TOP_Y
+            self.pile_mat_list.append(pile)
 
         # list of all the cards
         self.card_list = arcade.SpriteList()
@@ -47,6 +69,9 @@ class SolitaireGame(arcade.Window):
         """Render the screen"""
         # clear screen
         self.clear()
+
+        # draw the mats
+        self.pile_mat_list.draw()
 
         # draw cards
         self.card_list.draw()
@@ -77,7 +102,6 @@ class SolitaireGame(arcade.Window):
 
         # release cards
         self.held_cards = []
-
 
     def on_mouse_motion(self, x: int, y: int, dx: int, dy: int):
         """moving the mouse"""
