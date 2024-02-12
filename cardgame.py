@@ -1,10 +1,12 @@
 import arcade
-
+import random
 from Cards import Card
-from constants import (SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE,
-                       CARD_SUITS, CARD_VALUES, CARD_SCALE, START_X,
-                       BOTTOM_Y, MAT_WIDTH, MAT_HEIGHT, X_SPACING, MIDDLE_Y, TOP_Y)
+from constants import *
 
+
+# (SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE,
+#                        CARD_SUITS, CARD_VALUES, CARD_SCALE, START_X,
+#                        BOTTOM_Y, MAT_WIDTH, MAT_HEIGHT, X_SPACING, MIDDLE_Y, TOP_Y)
 
 class SolitaireGame(arcade.Window):
     """Main application class."""
@@ -24,9 +26,11 @@ class SolitaireGame(arcade.Window):
         # mats
         self.pile_mat_list = None
 
+        # piles
+        self.piles = None
+
     def setup(self):
         """Set up the game"""
-
         # handle held cards:
         self.held_cards = []
 
@@ -65,6 +69,18 @@ class SolitaireGame(arcade.Window):
                 card.position = START_X, BOTTOM_Y
                 self.card_list.append(card)
 
+        # Shuffle cards
+        for pos1 in range(len(self.card_list)):
+            pos2 = random.randrange(len(self.card_list))
+            self.card_list.swap(pos1, pos2)
+
+        # Create piles
+        self.piles = [[] for _ in range(PILE_COUNT)]
+
+        # Put all cards in the stock
+        for card in self.card_list:
+            self.piles[STOCK].append(card)
+
     def on_draw(self):
         """Render the screen"""
         # clear screen
@@ -93,7 +109,7 @@ class SolitaireGame(arcade.Window):
             # put it on top
             self.pull_to_top(self.held_cards[0])
 
-    def on_mouse_release(self, x: int, y: int, button: int, modifiers: int):
+    def on_mouse_release(self, x: float, y: float, button: int, modifiers: int):
         """for mouse release"""
 
         # no cards
@@ -106,13 +122,47 @@ class SolitaireGame(arcade.Window):
 
         # check for contact
         if arcade.check_for_collision(self.held_cards[0], pile):
+            # which pile?
+            pile_index = self.pile_mat_list.index(pile)
+            print(pile_index)
 
-            # move dropped card(s) to pile
-            for i, dropped_card in enumerate(self.held_cards):
-                dropped_card.position = pile.center_x, pile.center_y
+            # dropped in the same pile
+            if pile_index == self.get_pile_of_card(self.held_cards[0]):
+                print("index = pile, pass")
+                pass
 
-            # cards snapped, don't reset
-            reset_position = False
+            elif TABLEAU_1 <= pile_index <= TABLEAU_7:
+                # check if empty
+                if len(self.piles[pile_index]) > 0:
+                    # Move cards to proper position
+                    top_card = self.piles[pile_index][-1]
+                    for i, dropped_card in enumerate(self.held_cards):
+                        dropped_card.position = top_card.center_x, \
+                            top_card.center_y - CARD_VERTICAL_OFFSET * (i + 1)
+                        print(dropped_card.position)
+                else:
+                    # no cards in tableau pile
+                    print("no cards in pile")
+                    for i, dropped_card in enumerate(self.held_cards):
+                        # Move cards to proper position
+                        dropped_card.position = pile.center_x, \
+                                                pile.center_y - CARD_VERTICAL_OFFSET * i
+
+                # assign card to correct pile list
+                for card in self.held_cards:
+                    self.move_card_to_pile(card, pile_index)
+
+                reset_position = False
+
+            # if try to add to foundation, only one card can be added at a time
+            elif FOUNDATION_1 <= pile_index <= FOUNDATION_4 and len(self.held_cards) == 1:
+                # card position
+                self.held_cards[0].position = pile.position
+                # card list update
+                for card in self.held_cards:
+                    self.move_card_to_pile(card, pile_index)
+
+                reset_position = False
 
         # return cards to original position if snap is invalid
         if reset_position:
@@ -136,6 +186,21 @@ class SolitaireGame(arcade.Window):
         # put the card you are selecting on top of rendering
         self.card_list.remove(card)
         self.card_list.append(card)
+
+    def get_pile_of_card(self, card):
+        for index, pile in enumerate(self.piles):
+            if card in pile:
+                return index
+
+    def remove_card_from_pile(self, card):
+        for pile in self.piles:
+            if card in pile:
+                pile.remove(card)
+                break
+
+    def move_card_to_pile(self, card, pile_index):
+        self.remove_card_from_pile(card)
+        self.piles[pile_index].append(card)
 
 
 def main():
