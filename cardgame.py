@@ -164,36 +164,57 @@ class SolitaireGame(arcade.Window):
 
             elif TABLEAU_1 <= pile_index <= TABLEAU_7:
                 # check if empty
-                if len(self.piles[pile_index]) > 0:
-                    # Move cards to proper position
-                    top_card = self.piles[pile_index][-1]
-                    for i, dropped_card in enumerate(self.held_cards):
-                        dropped_card.position = top_card.center_x, \
-                            top_card.center_y - CARD_VERTICAL_OFFSET * (i + 1)
-                        print(dropped_card.position)
-                else:
+                if len(self.piles[pile_index]) == 0:
                     # no cards in tableau pile
-                    print("no cards in pile")
-                    for i, dropped_card in enumerate(self.held_cards):
-                        # Move cards to proper position
-                        dropped_card.position = pile.center_x, \
-                                                pile.center_y - CARD_VERTICAL_OFFSET * i
+                    if self.held_cards[0].value == "K":
+                        print("no cards in pile")
+                        for i, dropped_card in enumerate(self.held_cards):
+                            # Move cards to proper position
+                            dropped_card.position = pile.center_x, \
+                                pile.center_y - CARD_VERTICAL_OFFSET * i
 
-                # assign card to correct pile list
-                for card in self.held_cards:
-                    self.move_card_to_pile(card, pile_index)
+                        # assign card to correct pile list
+                        for card in self.held_cards:
+                            self.move_card_to_pile(card, pile_index)
+                        reset_position = False
+                    else:
+                        print("Invalid move: Table piles must start with a King")
 
-                reset_position = False
+                else:
+                    # pile is not empty, read top card
+                    top_card = self.piles[pile_index][-1]
+                    # check for alternating colors
+                    if self.is_alternating_color(top_card, self.held_cards[0]):
+                        for i, dropped_card in enumerate(self.held_cards):
+                            dropped_card.position = top_card.center_x, \
+                                top_card.center_y - CARD_VERTICAL_OFFSET * (i + 1)
+                        # assign card to correct pile list
+                        for card in self.held_cards:
+                            self.move_card_to_pile(card, pile_index)
+                        reset_position = False
+                    else:
+                        print("Invalid move: Cards must be alternating in color")
 
-            # if try to add to foundation, only one card can be added at a time
+            # if trying to add to foundation, only one card can be added at a time
             elif FOUNDATION_1 <= pile_index <= FOUNDATION_4 and len(self.held_cards) == 1:
-                # card position
-                self.held_cards[0].position = pile.position
-                # card list update
-                for card in self.held_cards:
-                    self.move_card_to_pile(card, pile_index)
-
-                reset_position = False
+                # if empty, only allow an ace
+                if len(self.piles[pile_index]) == 0:
+                    if self.held_cards[0].value == "A":
+                        self.held_cards[0].position = pile.position
+                        self.move_card_to_pile(self.held_cards[0], pile_index)
+                        reset_position = False
+                    else:
+                        print("Can only start foundation with Ace")
+                else:
+                    # check if card being adding follows the foundation rules
+                    top_card = self.piles[pile_index][-1]
+                    if self.held_cards[0].suit == top_card.suit:
+                        if CARD_VALUES.index(self.held_cards[0].value) - CARD_VALUES.index(top_card.value) == 1:
+                            self.held_cards[0].position = pile.position
+                            self.move_card_to_pile(self.held_cards[0], pile_index)
+                            reset_position = False
+                    else:
+                        print("Invalid move for foundation pile")
 
         # return cards to original position if snap is invalid
         if reset_position:
@@ -232,6 +253,18 @@ class SolitaireGame(arcade.Window):
     def move_card_to_pile(self, card, pile_index):
         self.remove_card_from_pile(card)
         self.piles[pile_index].append(card)
+
+    @staticmethod
+    def is_alternating_color(card1, card2):
+        red_suits = ["Hearts", "Diamonds"]
+        black_suits = ["Spades", "Clubs"]
+
+        # checks if one card is red and the other is black
+        if (card1.suit in red_suits and card2.suit in black_suits) or \
+                (card1.suit in black_suits and card2.suit in red_suits):
+            return True
+        else:
+            return False
 
 
 def main():
