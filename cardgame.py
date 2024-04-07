@@ -1,5 +1,6 @@
 import arcade
 import random
+from mainMenu import *
 from Cards import Card
 from constants import *
 
@@ -8,11 +9,12 @@ from constants import *
 #                        CARD_SUITS, CARD_VALUES, CARD_SCALE, START_X,
 #                        BOTTOM_Y, MAT_WIDTH, MAT_HEIGHT, X_SPACING, MIDDLE_Y, TOP_Y)
 
-class SolitaireGame(arcade.Window):
+
+class SolitaireGameView(arcade.View):
     """Main application class."""
 
     def __init__(self):
-        super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
+        super().__init__()
 
         self.card_list = None
 
@@ -341,8 +343,10 @@ class SolitaireGame(arcade.Window):
 
 def main():
     """main function"""
-    window = SolitaireGame()
-    window.setup()
+
+    window = arcade.Window(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
+    start_view = MainMenuView()
+    window.show_view(start_view)
     arcade.run()
 
 
