@@ -14,12 +14,12 @@ Explore various game modes as you sharpen your card-playing skills.
 
 Installation Instructions:
 
-Download Zip from the provided link or download from PyCharm-Arcade-DEV branch of repo
-Extract all and navigate to the "dist" folder, locating "cardgame.zip"
-Extract the zip file containing "cardgame.exe" & "_internal"
+Navigate to the dist folder in the repo and select "cardgame.zip"
+Choose the view raw option to start your download"
+Extract the zip containing "cardgame.exe", "README.txt" & "_internal"
 Double-click the executable to launch the game
 Navigate the main menu to the instructions view prior to starting
-Choose between Normal or Vegas mode to begin playing
+Pick between Normal or Vegas mode to begin playing
 
 
 Game Controls:
