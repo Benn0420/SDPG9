@@ -3,6 +3,10 @@ import random
 from mainMenu import *
 from Cards import Card
 from constants import *
+from firework import *
+from pauseMenu import *
+from victory import *
+from arcade.gui import UIManager, UIFlatButton
 
 
 # (SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE,
@@ -13,10 +17,14 @@ from constants import *
 class SolitaireGameView(arcade.View):
     """Main application class."""
 
-    def __init__(self):
+    def __init__(self, draw_mode="1", game_mode="N", vegas_cumulative=False, points=0):
         super().__init__()
+        self.draw_mode = draw_mode
+        self.game_mode = game_mode
+        self.vegas_cumulative = vegas_cumulative
 
         self.card_list = None
+        self.ui_manager = None
 
         arcade.set_background_color(arcade.color.AMAZON)
 
@@ -32,8 +40,22 @@ class SolitaireGameView(arcade.View):
         # piles
         self.piles = None
 
+        # stockpile run through counter
+        self.shuffling = False
+        self.shuffle_through = 0
+        self.shuffled_through = False
+        self.shuffle_limit = self.draw_mode
+        self.tracked_card_value = 0
+        self.tracked_card_suit = None
+
         # scoring
-        self.points = -52
+        if self.game_mode == "V":
+            self.points = -52
+        if self.game_mode == "N":
+            self.points = 0
+        if self.vegas_cumulative:
+            self.points = points
+
         self.points_text = None
 
         # timing
@@ -41,8 +63,24 @@ class SolitaireGameView(arcade.View):
         self.total_time = 0.0
         self.timer_text = None
 
+        # game finished
+        self.finished_foundations = 0
+        self.game_finished = False
+
+        # game won
+        self.fireworks_list = []
+        self.is_fireworks_active = False
+        self.number_of_fireworks = 0
+
     def setup(self):
         """Set up the game"""
+
+        # pause button
+        self.ui_manager = UIManager()
+        self.ui_manager.enable()
+        pause_button = UIFlatButton(PAUSE_X, PAUSE_Y, 75, 30, text="PAUSE", style=solitaire_style)
+        pause_button.on_click = self.on_pause_button_click
+        self.ui_manager.add(pause_button)
 
         # text object for point scoring
         self.points_text = arcade.Text(f"Points: {self.points}", POINTS_X, POINTS_Y,
@@ -135,6 +173,33 @@ class SolitaireGameView(arcade.View):
         # draw timer
         self.timer_text.draw()
 
+        # draw pause button
+        self.ui_manager.draw()
+
+        # draw fireworks if they're active
+        if self.is_fireworks_active:
+            for firework in self.fireworks_list:
+                firework.draw()
+
+    def on_update(self, delta_time):
+        # if the gameplay screen has been clicked
+        if self.game_underway:
+            self.total_time += delta_time
+            # update timer text
+            minutes = int(self.total_time) // 60
+            seconds = int(self.total_time) % 60
+            self.timer_text.text = f"Time: {minutes:02d}:{seconds:02d}"
+        # if fireworks are active
+        if self.is_fireworks_active:
+            for firework in self.fireworks_list:
+                firework.update(delta_time)
+                if firework.is_exploded:
+                    self.fireworks_list.remove(firework)
+            # if fireworks have all exploded
+            if len(self.fireworks_list) == 0:
+                self.is_fireworks_active = False
+                self.game_over()
+
     def on_mouse_press(self, x: int, y: int, button: int, modifiers: int):
         """for mouse press"""
 
@@ -150,8 +215,24 @@ class SolitaireGameView(arcade.View):
             # what pile is the card in?
             pile_index = self.get_pile_of_card(primary_card)
 
+            if self.shuffled_through:
+                self.tracked_card_value = 0
+                self.tracked_card_suit = None
+                self.shuffling = False
+                self.shuffled_through = False
+
             # if it's the stockpile
             if pile_index == STOCK:
+                if self.shuffling:
+                    # if stockpile has been shuffled through
+                    if primary_card.value == self.tracked_card_value and primary_card.suit == self.tracked_card_suit:
+                        self.shuffle_through += 1
+                        # if shuffle limit has been reached
+                        if str(self.shuffle_through) == self.shuffle_limit:
+                            # TESTING PURPOSES ONLY
+                            # self.game_winner()
+                            self.game_over()
+                        self.shuffled_through = True
                 if primary_card.is_face_down:
                     # flip the card face up
                     primary_card.face_up()
@@ -160,6 +241,10 @@ class SolitaireGameView(arcade.View):
                 if self.piles[TALON]:
                     # card in talon pile goes to the bottom of the stock
                     card_in_talon = self.piles[TALON].pop(0)
+                    if not self.shuffling:
+                        self.shuffling = True
+                        self.tracked_card_value = card_in_talon.value
+                        self.tracked_card_suit = card_in_talon.suit
                     card_in_talon.face_down()
                     self.move_card_to_pile(card_in_talon, 0)
                     self.push_to_back(card_in_talon)
@@ -167,8 +252,6 @@ class SolitaireGameView(arcade.View):
                 # move the card to the talon pile
                 primary_card.position = self.pile_mat_list[TALON].position
                 self.move_card_to_pile(primary_card, TALON)
-                # LOG: Print the number of cards in the stockpile after each click
-                print("Number of cards in stockpile:", len(self.piles[STOCK]))
             # if it's any other pile
             else:
                 if primary_card.is_face_down:
@@ -208,7 +291,6 @@ class SolitaireGameView(arcade.View):
 
             # dropped in the same pile
             if pile_index == self.get_pile_of_card(self.held_cards[0]):
-                print("index = pile, pass")
                 pass
 
             elif TABLEAU_1 <= pile_index <= TABLEAU_7:
@@ -255,7 +337,10 @@ class SolitaireGameView(arcade.View):
                     if self.held_cards[0].value == "A":
                         self.held_cards[0].position = pile.position
                         self.move_card_to_pile(self.held_cards[0], pile_index)
-                        self.increase_points(5)
+                        if self.game_mode == "V":
+                            self.increase_points(5)
+                        if self.game_mode == "N":
+                            self.increase_points(10)
                         reset_position = False
                     else:
                         print("Can only start foundation with Ace")
@@ -266,8 +351,20 @@ class SolitaireGameView(arcade.View):
                         if CARD_VALUES.index(self.held_cards[0].value) - CARD_VALUES.index(top_card.value) == 1:
                             self.held_cards[0].position = pile.position
                             self.move_card_to_pile(self.held_cards[0], pile_index)
-                            self.increase_points(5)
+                            if self.game_mode == "V":
+                                self.increase_points(5)
+                            if self.game_mode == "N":
+                                self.increase_points(10)
                             reset_position = False
+                            # check if card completes foundation stacking
+                            if self.held_cards[0].value == "K":
+                                self.finished_foundations += 1
+                                if self.game_mode == "N":
+                                    self.increase_points(50)
+                                # call game winner function if all foundations finished
+                                if self.finished_foundations == 4:
+                                    self.game_underway = False
+                                    self.game_winner()
                     else:
                         print("Invalid move for foundation pile")
 
@@ -328,23 +425,51 @@ class SolitaireGameView(arcade.View):
         else:
             return False
 
-    def on_update(self, delta_time):
-        if self.game_underway:
-            self.total_time += delta_time
-            # update timer text
-            minutes = int(self.total_time) // 60
-            seconds = int(self.total_time) % 60
-            self.timer_text.text = f"Time: {minutes:02d}:{seconds:02d}"
-
     def increase_points(self, amount):
         self.points += amount
         self.points_text.text = f"Points: {self.points}"
+
+    def on_pause_button_click(self, button):
+        pause_view = PauseView(self, self.draw_mode, self.game_mode, self.vegas_cumulative, self.points)
+        self.window.show_view(pause_view)
+
+    def game_winner(self):
+        self.game_underway = False
+        self.game_finished = True
+        self.trigger_fireworks()
+
+    def trigger_fireworks(self):
+        # set number of fireworks
+        self.number_of_fireworks = self.points + 250
+        # initializing fireworks for celebration
+        self.fireworks_list = []
+        for _ in range(self.number_of_fireworks):
+            x = random.randrange(0, SCREEN_WIDTH)
+            y = random.randrange(0, SCREEN_HEIGHT)
+            color = (random.randrange(256), random.randrange(256), random.randrange(256))
+            firework = Firework(x, y, color)
+            self.fireworks_list.append(firework)
+        # setting fireworks to active
+        self.is_fireworks_active = True
+
+    def get_final_points(self):
+        return self.points
+
+    def get_final_time(self):
+        return self.total_time
+
+    def game_over(self):
+        self.game_underway = False
+        self.game_finished = True
+        victory_view = VictoryView(self, self.draw_mode, self.game_mode, self.vegas_cumulative, self.points)
+        self.window.show_view(victory_view)
 
 
 def main():
     """main function"""
 
     window = arcade.Window(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
+    from mainMenu import MainMenuView
     start_view = MainMenuView()
     window.show_view(start_view)
     arcade.run()

@@ -1,9 +1,28 @@
 """Game constants"""
+import arcade
+from arcade.gui import UIFlatButton
 
 # screen title and size
 SCREEN_WIDTH = 960
 SCREEN_HEIGHT = 720
 SCREEN_TITLE = "SOLITAIRE"
+
+PAUSE_X = SCREEN_WIDTH - 100
+PAUSE_Y = SCREEN_HEIGHT - 50
+
+POINTS_X = SCREEN_WIDTH - 300
+POINTS_Y = 100
+
+TIMER_X = SCREEN_WIDTH - 300
+TIMER_Y = 50
+
+BUTTON_X = SCREEN_WIDTH / 2 - 100
+BUTTON1_Y = SCREEN_HEIGHT / 2 - 25
+BUTTON2_Y = SCREEN_HEIGHT / 2 - 100
+BUTTON3_Y = SCREEN_HEIGHT / 2 - 175
+BUTTON4_Y = SCREEN_HEIGHT / 2 - 250
+BUTTON_W = 200
+BUTTON_H = 50
 
 CARD_SCALE = 0.6
 
@@ -15,12 +34,6 @@ CARD_VERTICAL_OFFSET = CARD_HEIGHT * CARD_SCALE * 0.3
 MAT_PERCENT_OVERSIZE = 1.2
 MAT_HEIGHT = int(CARD_HEIGHT * MAT_PERCENT_OVERSIZE)
 MAT_WIDTH = int(CARD_WIDTH * MAT_PERCENT_OVERSIZE)
-
-POINTS_X = SCREEN_WIDTH - 300
-POINTS_Y = 100
-
-TIMER_X = SCREEN_WIDTH - 300
-TIMER_Y = 50
 
 VERTICAL_MARGIN_PERCENT = 0.10
 HORIZONTAL_MARGIN_PERCENT = 0.10
@@ -53,3 +66,39 @@ FOUNDATION_1 = 9
 FOUNDATION_2 = 10
 FOUNDATION_3 = 11
 FOUNDATION_4 = 12
+
+# Button style
+solitaire_style = {
+            "normal": UIFlatButton.UIStyle(
+                font_size=14,
+                font_name=("Arial", "Calibri"),
+                font_color=arcade.color.AMAZON,  # Change font color to contrast with light green background
+                bg=(152, 204, 152),  # Soft light green color
+                border=(120, 180, 120),  # Lighter green border color
+                border_width=2,
+            ),
+            "hover": UIFlatButton.UIStyle(
+                font_size=14,
+                font_name=("Arial", "Calibri"),
+                font_color=arcade.color.AMAZON,  # Change font color to contrast with light green background
+                bg=(144, 238, 144),  # Light green color on hover
+                border=(120, 180, 120),  # Lighter green border color
+                border_width=2,
+            ),
+            "press": UIFlatButton.UIStyle(
+                font_size=14,
+                font_name=("Arial", "Calibri"),
+                font_color=arcade.color.AMAZON,  # Change font color to contrast with light green background
+                bg=(124, 252, 124),  # Even lighter green color when pressed
+                border=(120, 180, 120),  # Lighter green border color
+                border_width=2,
+            ),
+            "disabled": UIFlatButton.UIStyle(
+                font_size=14,
+                font_name=("Arial", "Calibri"),
+                font_color=arcade.color.LIGHT_GRAY,  # Light gray font color for disabled state
+                bg=(152, 204, 152),  # Soft light green color
+                border=(120, 180, 120),  # Lighter green border color
+                border_width=2,
+            )
+        }
