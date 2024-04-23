@@ -15,7 +15,7 @@ Explore various game modes as you sharpen your card-playing skills.
 Installation Instructions:
 
 Navigate to the dist folder in the repo and select "cardgame.zip"
-Choose the view raw option to start your download"
+Choose the view raw option to start your download
 Extract the zip containing "cardgame.exe", "README.txt" & "_internal"
 Double-click the executable to launch the game
 Navigate the main menu to the instructions view prior to starting
