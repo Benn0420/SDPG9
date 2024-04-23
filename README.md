@@ -7,19 +7,19 @@ https://github.com/Benn0420/SDPG9/tree/PyCharm-Arcade-DEV
 Game Overview:
 
 Welcome to SDPG9's Solitaire Game, a classic Solitaire game with a twist! 
-The objective of the game is to arrange cards in descending order and alternating colors
+The objective of the game is to arrange cards in descending order and alternating colors,
 building up each of the four foundation piles in the top of the screen, starting with the aces. 
 Explore various game modes as you sharpen your card-playing skills.
 
 
 Installation Instructions:
 
-Navigate to the dist folder in the repo and select "cardgame.zip"
-Choose the view raw option to start your download
-Extract the zip containing "cardgame.exe", "README.txt" & "_internal"
-Double-click the executable to launch the game
-Navigate the main menu to the instructions view prior to starting
-Pick between Normal or Vegas mode to begin playing
+Navigate to the dist folder in the repo and select "cardgame.zip".
+Choose the view raw option to start your download.
+Extract the zip containing "cardgame.exe", "README.txt" & "_internal".
+Double-click the executable to launch the game.
+Navigate the main menu to the instructions view prior to starting.
+Pick between Normal or Vegas mode to begin playing.
 
 
 Game Controls:
